@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Documentation Utilisateur - Script d'importation PDF IKO France</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm 15mm 12mm 15mm;
+        }
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            color: #1f2937;
+            line-height: 1.42;
+            margin: 0;
+            padding: 0;
+            font-size: 10pt;
+        }
+        .header {
+            border-bottom: 2.5px solid #b71c1c;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+        .header h1 {
+            color: #b71c1c;
+            margin: 0 0 4px 0;
+            font-size: 20pt;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .header .subtitle {
+            font-size: 10.5pt;
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 8.5pt;
+            font-weight: 600;
+            margin-top: 4px;
+            margin-right: 6px;
+        }
+        h2 {
+            color: #1e3a8a;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 3px;
+            margin-top: 14px;
+            margin-bottom: 8px;
+            font-size: 12pt;
+        }
+        h3 {
+            color: #1e40af;
+            margin-top: 10px;
+            margin-bottom: 4px;
+            font-size: 10.5pt;
+        }
+        p {
+            margin: 0 0 6px 0;
+        }
+        ul, ol {
+            margin: 0 0 8px 18px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 2px;
+        }
+        code {
+            background-color: #f3f4f6;
+            color: #be123c;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 9.5pt;
+        }
+        pre {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 3.5px solid #b71c1c;
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 9pt;
+            margin: 6px 0 8px 0;
+            white-space: pre-wrap;
+        }
+        .box-info {
+            background-color: #eff6ff;
+            border-left: 3.5px solid #2563eb;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 9.5pt;
+        }
+        .box-info ul {
+            margin-bottom: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+            font-size: 9pt;
+        }
+        table, th, td {
+            border: 1px solid #cbd5e1;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            text-align: left;
+            padding: 6px 8px;
+            font-weight: 600;
+        }
+        td {
+            padding: 5px 8px;
+            vertical-align: top;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .footer {
+            margin-top: 14px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+            font-size: 8pt;
+            color: #64748b;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== PAGE 1 ==================== -->
+    <div class="header">
+        <h1>IKO FRANCE — Guide d'utilisation</h1>
+        <div class="subtitle">Automatisation de l'importation des fiches d'identité clubs PDF vers MySQL</div>
+        <span class="badge">Script : import_club_pdf.py</span>
+        <span class="badge">Schéma : Create.sql</span>
+        <span class="badge">Saison 2026-2027</span>
+    </div>
+
+    <h2>1. Présentation générale</h2>
+    <p>
+        Ce guide détaille l'utilisation du script <code>import_club_pdf.py</code> pour convertir automatiquement
+        les formulaires officiels <strong>« FICHE D'IDENTITÉ CLUB »</strong> reçus en PDF par IKO France
+        en fichiers de requêtes SQL transactionnels prêts à être injectés dans la base de données.
+    </p>
+
+    <div class="box-info">
+        <strong>Fonctionnalités intégrées :</strong>
+        <ul>
+            <li><strong>Extraction ciblée :</strong> Récupération du club, dojo, professeur, président et contacts administratifs.</li>
+            <li><strong>Géocodage spatial :</strong> Résolution automatique des coordonnées GPS via l'API officielle française (WGS84 <code>SRID 4326</code>).</li>
+            <li><strong>Intégrité relationnelle :</strong> Respect des contraintes de clés étrangères, UUIDs et unicité de <code>Create.sql</code>.</li>
+            <li><strong>Traitement individuel ou en lot :</strong> Traitement d'un PDF isolé ou de tous les PDF d'un répertoire.</li>
+        </ul>
+    </div>
+
+    <h2>2. Prérequis et Installation</h2>
+    <p>Le script s'exécute avec Python 3 (version 3.8+). Une seule bibliothèque de lecture PDF est requise :</p>
+    <pre>pip install pypdf</pre>
+    <p style="font-size: 9pt; color: #4b5563;">
+        <em>Note :</em> Si vous utilisez déjà <code>pdfplumber</code> ou <code>PyMuPDF</code> (<code>fitz</code>), elles sont automatiquement reconnues sans installation supplémentaire.
+    </p>
+
+    <h2>3. Commandes d'exécution</h2>
+
+    <h3>3.1. Convertir un formulaire unique</h3>
+    <p>Pour traiter un formulaire spécifique (ex: <code>Ryuko_Dojo.pdf</code>) :</p>
+    <pre>python import_club_pdf.py Ryuko_Dojo.pdf</pre>
+    <p>Le script génère immédiatement le fichier SQL <code>Insert_RYUKO_DOJO.sql</code> dans le même dossier.</p>
+
+    <h3>3.2. Convertir tous les formulaires d'un dossier (traitement par lot)</h3>
+    <p>Pour convertir en une seule commande tous les PDF présents dans le répertoire en cours :</p>
+    <pre>python import_club_pdf.py *.pdf</pre>
+
+    <h3>3.3. Définir un répertoire source et un dossier de sortie</h3>
+    <p>Pour scanner un dossier spécifique et sauvegarder les <code>.sql</code> générés dans un autre dossier :</p>
+    <pre>python import_club_pdf.py --dir "C:\Clubs_PDF" --out "C:\Exports_SQL"</pre>
+
+    <p style="font-size: 8.5pt; color: #64748b; text-align: right; margin-top: 15px;">Page 1 sur 2</p>
+
+    <!-- ==================== PAGE 2 ==================== -->
+    <div class="page-break"></div>
+
+    <h2>4. Correspondance des tables MySQL (Create.sql)</h2>
+    <p>Les informations contenues dans le PDF sont ventilées selon l'architecture relationnelle suivante :</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Section PDF</th>
+                <th style="width: 25%;">Tables cibles</th>
+                <th style="width: 50%;">Données & Logique d'insertion</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>1. Identification du club</strong></td>
+                <td><code>Clubs</code><br><code>Addresses</code><br><code>Dojos</code></td>
+                <td>
+                    - Nom officiel, initiales générées, URL du site dans <code>Presentation</code>.<br>
+                    - Coordonnées spatiales WGS84 de l'adresse du dojo (<code>SRID 4326</code>).<br>
+                    - Création du dojo rattaché avec <code>IsMain = TRUE</code>.
+                </td>
+            </tr>
+            <tr>
+                <td><strong>2. Professeur Principal</strong></td>
+                <td><code>Persons</code><br><code>Members</code><br><code>Instructors</code><br><code>PersonsCustomFields</code></td>
+                <td>
+                    - Identité complète, email unique, mobile.<br>
+                    - Ajout dans <code>Instructors</code> avec <code>Job = 'Professeur Principal'</code>.<br>
+                    - Enregistrement du <em>Grade</em> et de l'<em>Ancienneté</em> dans les champs personnalisés traduits.
+                </td>
+            </tr>
+            <tr>
+                <td><strong>3. Président du club</strong></td>
+                <td><code>Persons</code><br><code>Addresses</code><br><code>Members</code><br><code>Contacts</code></td>
+                <td>
+                    - Adresse personnelle du président géocodée.<br>
+                    - Ajout dans <code>Contacts</code> avec <code>Job = 'Président'</code>.<br>
+                    - Déduplication automatique si le président est aussi professeur principal.
+                </td>
+            </tr>
+            <tr>
+                <td><strong>4. Démarches administratives</strong></td>
+                <td><code>Persons</code><br><code>Members</code><br><code>Contacts</code></td>
+                <td>
+                    - Insertion des interlocuteurs (Trésorier, Secrétaire, etc.).<br>
+                    - Attribution automatique de l'adresse du club par défaut.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>5. Injection des scripts SQL en base de données</h2>
+    <p>Chaque script généré est autonome et encapsulé dans une transaction (<code>START TRANSACTION / COMMIT</code>) :</p>
+
+    <h3 style="margin-top: 6px;">Option A : En ligne de commande MySQL</h3>
+    <pre>mysql -u &lt;utilisateur&gt; -p &lt;nom_base&gt; &lt; Insert_RYUKO_DOJO.sql</pre>
+
+    <h3 style="margin-top: 6px;">Option B : Avec un client graphique (MySQL Workbench, DBeaver, HeidiSQL, phpMyAdmin)</h3>
+    <ol>
+        <li>Ouvrez votre outil et connectez-vous au serveur MySQL.</li>
+        <li>Ouvrez le fichier <code>Insert_RYUKO_DOJO.sql</code> dans un onglet SQL.</li>
+        <li>Cliquez sur <strong>Exécuter (Execute Script)</strong>.</li>
+    </ol>
+
+    <h2>6. Diagnostics & Bonnes pratiques</h2>
+    <ul>
+        <li>
+            <strong>Connexion hors-ligne :</strong> Si le réseau est indisponible, le géocodage applique des coordonnées de secours valides sans bloquer la création du script SQL.
+        </li>
+        <li>
+            <strong>Unicité des emails :</strong> MySQL impose une contrainte d'unicité sur <code>Persons.Email</code> et <code>Contacts.Email</code>. Vérifiez que chaque personne dispose de son adresse propre.
+        </li>
+        <li>
+            <strong>Caractères spéciaux & Apostrophes :</strong> Le script protège automatiquement toutes les valeurs contre les injections SQL via échappement standard (<code>''</code>).
+        </li>
+    </ul>
+
+    <div class="footer">
+        IKO France &copy; 2026 — Documentation technique — Tous droits réservés
+    </div>
+    <p style="font-size: 8.5pt; color: #64748b; text-align: right; margin-top: 5px;">Page 2 sur 2</p>
+
+</body>
+</html>
